@@ -45,7 +45,7 @@ public class Main {
 
     public static void runMainApp() {
         SwingUtilities.invokeLater(() -> {
-            JFrame mainFrame = new MainFrame(null);
+            JFrame mainFrame = new MainFrame();
             mainFrame.setVisible(true);
         });
     }
