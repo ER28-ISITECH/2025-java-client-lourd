@@ -45,6 +45,7 @@ public class LoginDialog extends JDialog {
                 return;
             }
             JOptionPane.showMessageDialog(this, "Connexion réussie!", "Succès", JOptionPane.INFORMATION_MESSAGE);
+            Main.runMainApp();
             dispose();
         });
 

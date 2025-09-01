@@ -11,15 +11,10 @@ import java.util.Objects;
 
 public class PasswordHasher {
 
-    private static final int ITERATIONS = 65536;
-    private static final int KEY_LENGTH = 256;
-    private static final int SALT_LENGTH = 16;
-    private static final String ALGORITHM = "PBKDF2WithHmacSHA512";
-
     public static String hashPassword(String password) {
         Objects.requireNonNull(password, "Password cannot be null");
         byte[] salt = generateSalt();
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, Constants.ITERATIONS, Constants.KEY_LENGTH);
         byte[] hash = generateHash(spec);
         return Base64.getEncoder().encodeToString(salt) + ":" + Base64.getEncoder().encodeToString(hash);
     }
@@ -33,21 +28,21 @@ public class PasswordHasher {
         }
         byte[] salt = Base64.getDecoder().decode(parts[0]);
         byte[] hash = Base64.getDecoder().decode(parts[1]);
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, KEY_LENGTH);
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, Constants.ITERATIONS, Constants.KEY_LENGTH);
         byte[] newHash = generateHash(spec);
         return slowEquals(hash, newHash);
     }
 
     private static byte[] generateSalt() {
         SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[SALT_LENGTH];
+        byte[] salt = new byte[Constants.SALT_LENGTH];
         random.nextBytes(salt);
         return salt;
     }
 
     private static byte[] generateHash(KeySpec spec) {
         try {
-            SecretKeyFactory factory = SecretKeyFactory.getInstance(ALGORITHM);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(Constants.ALGORITHM);
             return factory.generateSecret(spec).getEncoded();
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new RuntimeException("Error hashing password", e);
