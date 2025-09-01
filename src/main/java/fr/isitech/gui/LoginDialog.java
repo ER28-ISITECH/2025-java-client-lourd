@@ -38,6 +38,8 @@ public class LoginDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "Le mot de passe doit contenir au moins 8 caractères.", "Erreur", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+            Main.password = Arrays.toString(password);
+
             String storedHash = Main.configService.getProperty("user.password");
             if (!PasswordHasher.verifyPassword(Arrays.toString(password), storedHash)) {
                 JOptionPane.showMessageDialog(this, "Mot de passe incorrect.", "Erreur", JOptionPane.ERROR_MESSAGE);
@@ -45,7 +47,11 @@ public class LoginDialog extends JDialog {
                 return;
             }
             JOptionPane.showMessageDialog(this, "Connexion réussie!", "Succès", JOptionPane.INFORMATION_MESSAGE);
-            Main.runMainApp();
+            try {
+                Main.runMainApp();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
             dispose();
         });
 

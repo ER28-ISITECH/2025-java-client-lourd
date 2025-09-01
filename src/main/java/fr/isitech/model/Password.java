@@ -6,8 +6,19 @@ public class Password {
     public String username;
     public String password;
 
-    public int getId() { return id; }
-    public String getTitle() { return title; }
-    public String getUsername() { return username; }
-    public String getPassword() { return password; }
+    public int getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
 }

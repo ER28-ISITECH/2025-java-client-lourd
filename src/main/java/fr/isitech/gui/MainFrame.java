@@ -1,6 +1,7 @@
 package fr.isitech.gui;
 
 import fr.isitech.model.Password;
+import fr.isitech.service.DatabaseHelper;
 import fr.isitech.service.PasswordService;
 import fr.isitech.utils.Constants;
 
@@ -8,6 +9,7 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.sql.SQLException;
 
 public class MainFrame extends JFrame {
     private PasswordService passwordService;
@@ -19,21 +21,37 @@ public class MainFrame extends JFrame {
     private JPanel rightPanel;
     private JButton addPasswordButton;
 
-    public MainFrame() {
+    public MainFrame(DatabaseHelper dbHelper) throws SQLException {
         super(Constants.APP_NAME + " - Password");
-        passwordService = new PasswordService();
+        passwordService = new PasswordService(dbHelper);
         listModel = new DefaultListModel<>();
-        for (Password pwd : passwordService.getAllPasswords()) {
-            listModel.addElement(pwd);
-        }
 
+        // Initialize UI components first
+        initComponents();
+        setupLayout();
+        setupEvents();
+
+        // Now refresh the list
+        refreshList();
+
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+    }
+
+    private void initComponents() {
+        passwordPanel = new PasswordPanel();
+        rightPanel = new JPanel(new BorderLayout());
+        rightPanel.add(passwordPanel, BorderLayout.CENTER);
+    }
+
+    private void setupLayout() {
         // Left Panel: List + Search
         JPanel leftPanel = new JPanel(new BorderLayout());
-
         addPasswordButton = new JButton("Add Password");
         addPasswordButton.addActionListener(e -> {
-            // Open a dialog to add a new password (not implemented)
-            JOptionPane.showMessageDialog(this, "Add Password functionality not implemented.");
+            AddPasswordDialog dialog = new AddPasswordDialog(MainFrame.this, passwordService, listModel);
+            dialog.setVisible(true);
         });
         leftPanel.add(addPasswordButton, BorderLayout.SOUTH);
 
@@ -68,17 +86,13 @@ public class MainFrame extends JFrame {
         });
         leftPanel.add(new JScrollPane(passwordList), BorderLayout.CENTER);
 
-        // Right Panel: Password details
-        passwordPanel = new PasswordPanel();
-        rightPanel = new JPanel(new BorderLayout());
-        rightPanel.add(passwordPanel, BorderLayout.CENTER);
-
         // Main layout
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
         splitPane.setDividerLocation(300);
         add(splitPane);
+    }
 
-        // Event: show password details when selected
+    private void setupEvents() {
         passwordList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -96,20 +110,36 @@ public class MainFrame extends JFrame {
                 }
             }
         });
-
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
     }
 
     private void filterList() {
         String search = searchField.getText().toLowerCase();
         listModel.clear();
-        for (Password pwd : passwordService.getAllPasswords()) {
-            if (pwd.getTitle().toLowerCase().contains(search) ||
-                    pwd.getUsername().toLowerCase().contains(search)) {
+        try {
+            for (Password pwd : passwordService.getAllPasswords()) {
+                if (pwd.getTitle().toLowerCase().contains(search) ||
+                        pwd.getUsername().toLowerCase().contains(search)) {
+                    listModel.addElement(pwd);
+                }
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Failed to filter passwords: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        if (listModel.isEmpty()) {
+            rightPanel.removeAll();
+            rightPanel.revalidate();
+            rightPanel.repaint();
+        }
+    }
+
+    public void refreshList() {
+        listModel.clear();
+        try {
+            for (Password pwd : passwordService.getAllPasswords()) {
                 listModel.addElement(pwd);
             }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Failed to refresh passwords: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
         if (listModel.isEmpty()) {
             rightPanel.removeAll();
